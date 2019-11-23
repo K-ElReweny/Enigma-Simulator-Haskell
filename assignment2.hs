@@ -33,14 +33,8 @@ encodeMessage cipher offset message = [ encode cipher offset char | char <- mess
     CREDITS TO DR EMMA NORLING FOR USING HER VERSION OF THIS FUNCTION FOR BEING MORE EFFICIENT
 -}
 
-reverseEncode :: Cipher -> Int-> Char -> Char
-reverseEncode cipher offset c = alphabet !! (((findLoc c cipher)-offset) `mod` 26)
-
-findLoc :: Eq a => a -> [a] -> Int 
-findLoc item [single] = 0
-findLoc item (x:xs)
-            | item == x = 0
-            | otherwise = 1 + findLoc item xs
+reverseEncode :: Cipher -> Int -> Char -> Char
+reverseEncode cipher offset encodedChar = ['A' .. 'Z'] !! (head (elemIndices encodedChar (offsetCipher cipher offset)))
 
 --reverseEncodeMessage: takes a cipher, an offset and an encoded message and return the plain text message
 
@@ -126,7 +120,7 @@ getReflector (SimpleEnigma rotor1 rotor2 rotor3 ref offsets) = ref
 getReflector (SteckeredEnigma rotor1 rotor2 rotor3 ref offsets steckerboard) = ref
 
 steckerTest = [('A' ,'B') , ('C' , 'D') ,('E' , 'F')]
-offsetTest = (25,25,25)
+offsetTest = (0,0,1)
 testEnigma = (SimpleEnigma rotor1 rotor2 rotor3 reflectorB offsetTest)
 testEnigma2 = (SteckeredEnigma rotor1 rotor2 rotor3 reflectorB offsetTest steckerTest)
 
@@ -176,7 +170,8 @@ steckerChar char (x:xs)
 
 -- enigmaEncode: Given a character to encode, and an enigma, returns the encoded letter.
 enigmaEncode :: Char -> Enigma -> Char
-enigmaEncode char enigma = rotorsDecode (incrementEnigma enigma) (reflectChar (rotorsEncode (incrementEnigma enigma) char) (getReflector enigma))
+enigmaEncode char enigma = do{let newEnigma = incrementEnigma enigma
+                                ; rotorsDecode newEnigma (reflectChar (rotorsEncode newEnigma char) (getReflector newEnigma))  }
 
 -- enigmaEncodeMessage : Given a message to encode and an enigma , it returns encoded letter by calling enigmaEncode on each letter.
 enigmaEncodeMessage :: String -> Enigma -> String
