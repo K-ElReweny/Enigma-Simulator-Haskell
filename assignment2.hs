@@ -112,15 +112,13 @@ data Enigma = SimpleEnigma Rotor Rotor Rotor Reflector Offsets  | SteckeredEnigm
 type Crib = [(Int , Char , Char)] -- the tuple represent a column
 type Menu = [Int] 
 
-
-
 --getReflector : takes Enigma of any type , returns corrosponding reflector
 getReflector :: Enigma -> Reflector
 getReflector (SimpleEnigma rotor1 rotor2 rotor3 ref offsets) = ref
 getReflector (SteckeredEnigma rotor1 rotor2 rotor3 ref offsets steckerboard) = ref
 
 steckerTest = [('A' ,'B') , ('C' , 'D') ,('E' , 'F')]
-offsetTest = (0,0,1)
+offsetTest = (0,0,0)
 testEnigma = (SimpleEnigma rotor1 rotor2 rotor3 reflectorB offsetTest)
 testEnigma2 = (SteckeredEnigma rotor1 rotor2 rotor3 reflectorB offsetTest steckerTest)
 
@@ -137,9 +135,11 @@ incrementEnigma :: Enigma -> Enigma
 incrementEnigma (SimpleEnigma rotor1 rotor2 rotor3 ref offsets) = (SimpleEnigma rotor1 rotor2 rotor3 ref (incrementOffset offsets))
 incrementEnigma (SteckeredEnigma rotor1 rotor2 rotor3 ref offsets steckerboard) = (SteckeredEnigma rotor1 rotor2 rotor3 ref (incrementOffset offsets) steckerboard)
 
+-- encode' : takes a rotor , an offset and a char , returns char after being shifted by offset then encoded then shifted back again.
 encode' :: Rotor -> Int -> Char -> Char
 encode' rotor offset char = encode alphabet offset (encode rotor 0 (reverseEncode alphabet offset char))
 
+-- decode : takes a rotor , an offset and a char , returns char after being shifted by offset then reverseEncoded then shifted back again.
 decode :: Rotor -> Int-> Char -> Char
 decode rotor offset char = encode alphabet offset (reverseEncode rotor 0 (reverseEncode alphabet offset char))
 
@@ -168,13 +168,22 @@ steckerChar char (x:xs)
             | char == snd x = fst x 
             | otherwise = steckerChar char xs
 
--- enigmaEncode: Given a character to encode, and an enigma, returns the encoded letter.
+{- enigmaEncode: Given a character to encode, and an enigma, returns the encoded letter. it first increments the enigma 
+   then it encodes and reflects and decode char.
+-}
 enigmaEncode :: Char -> Enigma -> Char
 enigmaEncode char enigma = do{let newEnigma = incrementEnigma enigma
-                                ; rotorsDecode newEnigma (reflectChar (rotorsEncode newEnigma char) (getReflector newEnigma))  }
+                                ; rotorsDecode newEnigma (reflectChar (rotorsEncode newEnigma char) (getReflector enigma))  }
 
--- enigmaEncodeMessage : Given a message to encode and an enigma , it returns encoded letter by calling enigmaEncode on each letter.
+-- enigmaEncode' : does same function of enigmaEncode but without incrementing enigma , used in enigmaEncodeMessage
+enigmaEncode' :: Char -> Enigma -> Char 
+enigmaEncode' char enigma = rotorsDecode enigma (reflectChar (rotorsEncode enigma char) (getReflector enigma))
+
+-- enigmaEncodeMessage : Given a message to encode and an enigma , it returns encoded letter by calling enigmaEncode' on each letter.
 enigmaEncodeMessage :: String -> Enigma -> String
-enigmaEncodeMessage message enigma = [ enigmaEncode char enigma | char <- message]
+enigmaEncodeMessage [] enigma = []
+enigmaEncodeMessage (c:cs) enigma
+     = (enigmaEncode' c (incrementEnigma enigma)) : enigmaEncodeMessage cs (incrementEnigma enigma)
 
 testMessage = "INXTHEXENIGMAXMACHINEXEACHXROTORXHADXAXNOTCHSTOPXINXTHEXSPECIFICATIONCOMMAXIXHAVEXASSUMEDXTHATXTHATXNOTCHXISXALWAYSXATXPOSITTIONXTWENTYFIVEXZXXWHEREASXINXREALITYXITXWASXATXAXDIFFERENTXPOSITIONXFORXEACHXROTORSTOPXWHENXAXKEYXWASXPRESSEDCOMMAXTHEXVERYXFIRSTXTHINGXTHATXHAPPENEDXWASXTHATXTHEXROTORSXWEREXADVANCEDSTOPXTHEXRIGHTXROTORXISXROTATEDXBYXONESTOPXIFXITXHADXALREADYXBEENXROTATEDXTWENTYFIVEXTIMESXTHATXISXWASXATXPOSITIONXTWENTYFIVECOMMAXTHEXNOTCHXWOULDXCAUSEXTHEXMIDDLEXROTORXTOXALSOXROTATESTOPXIFXTHATXROTORXHADXALREADYXBEENXROTATEDXTWENTYFIVEXTIMECOMMAXITXINXTURNXWOULDXCAUSEXTHEXLEFTXROTORXTOXROTATESTOPXINXOTHERXWORDSCOMMAXFORXTHEXMIDDLEXROTORXTOXROTATEXONCECOMMAXTHEREXHADXTOXBEXTWENTYSIXXKEYXPRESSESSTOPXFORXTHEXLEFTXROTORXTOXROTATEXONCECOMMAXTHEREXHADXTOXBEXTWENTYSIXXTIMESXTWENTYSIXXKEYXPRESSESSTOPXTOXGETXALLXTHEXWAYXBACKXTOXZEROCOMMAZEROCOMMAZEROCOMMAXTHEREXHADXTOXBEXTWENTYSIXXTIMESXTWENTYSIXXTIMESXTWENTYSIXXKEYXPRESSEESSTOPTHEXDOWNSIDEXOFXTHEXSIMPLIFICATIONXTHATXIXHAVEXGIVENXISXTHATXTHEXONLINEXSIMULATORSXWILLXNOTXPROGRESSXTHEXSUBSEQUENTXROTORSXATXTHEXSAMEXTIMEXTHATXYOURXSIMULATIONXDOESSTOPXINXACTUALXFACTXROTORXONEXHADXAXNOTCHXATXPOSITIONXQCOMMAXROTORTWOXATXPOSITIONXECOMMAXROTORTHREEXATXPOSITIONXVCOMMAXROTORFOURXATXPOSITIONXJCOMMAXANDXROTORFIVEXATXPOSITIONXZSTOP"
+test2 = "HQRFMNYYVUUNBHACFQDZYSABBUEXJJGJPSFQGNTAJNLNZEIEPUSAXSYEKUBAHXLJZEUCGRFLYHUCDKDMKLZRPCQFMAHTGVYSSEYKUTWRXFHFMZRUWNNKCRTBNHSIOUWODBTAZXPRSJALISVOTAFSFXETWMZRVFRLJNYCWYNMKVBGJTUJKDQBZTNBRSXUGDJRRBUWJBKVCAAWMSSFELVIPOHZTDGOXIZDQGHNLADFAXHVFKGQYASKCZEFAWFABPIITZQPUWXJRHDFLLSMKIMVCIWEJCYSULAAWVQLOVHGJOKYFHIWVFBATADWVYARQBFEAWHLCKGDRXDRMSMNNBSKHFYIRSYHLQGCEQKIDQEXGIMHTUGHISMWQBWERWLGLEATJIJPRWZJISCGDIVXJCRWJTCJNOFDEBXBGSRRICMQXUZHDVYQVFTNXQVCLOBCNZGKSQUFTAOZUHXURSKLKZFHBBYPQTDILBLXCOSAMFHNEGJPXXBCGAXVSRIVSWSRSQOWUAGZSYVOAEMQHUOFJYKOGRFAXUQLYCPGCFMCOPIBIYGJJJZAFSJVSLRBAJZVWITZKJMFWSBGKTLVOCSWHTDSYVWYNHYZMNISJHSPLXTJGIQVNJHGYWLOCTXGCGKHAURIKBNSAMKLPJWQVAVZOHYNUBEPNAXILRQWDIQDYYPZVXBHLTLSSFXBJGJVVNHZHMWKLCWENMLOYDITLQCERPYNODYZLAPLYPLCEWOMJCEKSKRSAQKCLUMNBYWWWJAHHVEOYKXHOYYNUREFGGTVMJYMJLYUNQKMMWYJQMZXDFVFSIEKYVFTMMFAJSLBQBCKWBDUGKCJSJLRYHGADWCWMTSTKRGGPYRBOLPGZUVVKPRKCFAEJWWVVPWAHEGHKDAVPMXVHBLPWIVYILHKDSKWCSDWLVHRLOSUHCSKUDTAVIIFRXUFBWFYZLAQWBQJADGJOFDEFWGVXSKEYQCKCFTZWMBIQNWLRAXJOONXTNJQMZCREOIQZYYPIVIQEXFSHAZIOKYXJHJCHIWGWWZSIAYJPJVBKWDFKZUOUBYIGVMLCIZWIFKDELOULELFBUBUEJMUTMGTQUDIGIKZLZKNDGYQUAHODPSHEBEEOSNHUBTNPNAUQKJIZFYXHDQOQBXSCRWICRMGBETZKZBURJCHITCUBFJJHSXOLXUQRGKWGJBPKNNODIBHFOCKYDEVRVZITAMPVZPZLEKFLZKHBVLYTWBFCCUWMXGLSRQALPJQPTISHPWDBQAMBMKSKIZCQCHLGPDUVRWYWW"
