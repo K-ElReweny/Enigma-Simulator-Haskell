@@ -109,7 +109,7 @@ type Steckerboard = [( Char , Char )]
 data Enigma = SimpleEnigma Rotor Rotor Rotor Reflector Offsets  | SteckeredEnigma Rotor Rotor Rotor Reflector Offsets Steckerboard
 
 -- define Crib &  menu
-type Crib = [(Int , Char , Char)] -- the tuple represent a column
+type Crib = (String , String)
 type Menu = [Int] 
 
 --getReflector : takes Enigma of any type , returns corrosponding reflector
@@ -117,7 +117,7 @@ getReflector :: Enigma -> Reflector
 getReflector (SimpleEnigma rotor1 rotor2 rotor3 ref offsets) = ref
 getReflector (SteckeredEnigma rotor1 rotor2 rotor3 ref offsets steckerboard) = ref
 
-steckerTest = [('A' ,'B') , ('C' , 'D') ,('E' , 'F')]
+steckerTest = [('A' ,'M') , ('S' , 'R')]
 offsetTest = (0,0,0)
 testEnigma = (SimpleEnigma rotor1 rotor2 rotor3 reflectorB offsetTest)
 testEnigma2 = (SteckeredEnigma rotor1 rotor2 rotor3 reflectorB offsetTest steckerTest)
@@ -146,26 +146,26 @@ decode rotor offset char = encode alphabet offset (reverseEncode rotor 0 (revers
 -- rotorsEncode : takes an enigma of any type and a char and returns char after being encoded by 3 different rotors in order.
 rotorsEncode :: Enigma -> Char -> Char
 rotorsEncode (SimpleEnigma rotor1 rotor2 rotor3 ref (offset1 , offset2 , offset3)) char = encode' rotor1 offset1 (encode' rotor2 offset2 (encode' rotor3 offset3 char))
---rotorsEncode (SteckeredEnigma r1 r2 r3 ref (o1 , o2 , o3) steckerboard) char = encode r1 o1 (encode r2 o2 (encode r3 o3 (steckerChar char steckerboard)))
+rotorsEncode (SteckeredEnigma r1 r2 r3 ref (o1 , o2 , o3) steckerboard) char = encode' r1 o1 (encode' r2 o2 (encode' r3 o3 (steckerChar char steckerboard )))
 
 --rotorsDecode : takes an enigma and a char and returns char after being reverse encoded by 3 different rotors in order.
 rotorsDecode :: Enigma -> Char -> Char
 rotorsDecode (SimpleEnigma rotor1 rotor2 rotor3 ref (offset1 , offset2 , offset3)) char = decode rotor3 offset3 (decode rotor2 offset2 (decode rotor1 offset1 char))
---rotorsDecode (SteckeredEnigma r1 r2 r3 ref (o1 , o2 , o3) steckerboard) char = steckerChar (reverseEncode r3 o3 (reverseEncode r2 o2 (reverseEncode r1 o1 char))) steckerboard
+rotorsDecode (SteckeredEnigma r1 r2 r3 ref (o1 , o2 , o3) steckbd) char = steckerChar (decode r3 o3 (decode r2 o2 (decode r1 o1 char))) steckbd
 
 -- reflectChar : takes a char and a reflector as a parameter and returns a char after searching recursively over list of char tuples
 reflectChar :: Char -> Reflector -> Char
-reflectChar char (x:xs)
-            | char == fst x = snd x
-            | char == snd x = fst x
+reflectChar char ((f , s):xs)
+            | char == f = s
+            | char == s = f
             | otherwise = reflectChar char xs
 
 -- steckerChar : takes a char and a steckerboard as parameters and returns char after recursivly searching through list
 steckerChar :: Char -> Steckerboard -> Char 
 steckerChar char [] = char
-steckerChar char (x:xs)
-            | char == fst x = snd x
-            | char == snd x = fst x 
+steckerChar char ((f , s):xs)
+            | char == f = s
+            | char == s = f
             | otherwise = steckerChar char xs
 
 {- enigmaEncode: Given a character to encode, and an enigma, returns the encoded letter. it first increments the enigma 
