@@ -117,11 +117,6 @@ getReflector :: Enigma -> Reflector
 getReflector (SimpleEnigma rotor1 rotor2 rotor3 ref offsets) = ref
 getReflector (SteckeredEnigma rotor1 rotor2 rotor3 ref offsets steckerboard) = ref
 
-steckerTest = [('A' ,'M') , ('S' , 'R')]
-offsetTest = (0,0,0)
-testEnigma = (SimpleEnigma rotor1 rotor2 rotor3 reflectorB offsetTest)
-testEnigma2 = (SteckeredEnigma rotor1 rotor2 rotor3 reflectorB offsetTest steckerTest)
-
 --incrementOffset : takes a tuple and decides which offset to inc and does respectively
 incrementOffset :: (Int ,Int, Int) -> (Int , Int , Int)
 incrementOffset (offset1 , offset2 , offset3) 
@@ -168,9 +163,8 @@ steckerChar char ((f , s):xs)
             | char == s = f
             | otherwise = steckerChar char xs
 
-{- enigmaEncode: Given a character to encode, and an enigma, returns the encoded letter. it first increments the enigma 
-   then it encodes and reflects and decode char.
--}
+{-enigmaEncode: Given a character to encode, and an enigma, returns the encoded letter. it first increments the enigma 
+then it encodes and reflects and decode char. -}
 enigmaEncode :: Char -> Enigma -> Char
 enigmaEncode char enigma = do{let newEnigma = incrementEnigma enigma
                                 ; rotorsDecode newEnigma (reflectChar (rotorsEncode newEnigma char) (getReflector enigma))  }
@@ -185,21 +179,22 @@ enigmaEncodeMessage [] enigma = []
 enigmaEncodeMessage (c:cs) enigma
      = (enigmaEncode' c (incrementEnigma enigma)) : enigmaEncodeMessage cs (incrementEnigma enigma)
 
--- longestMenu: which is given a crib and returns the longest menu
---longestMenu :: Crib -> Menu
---longestMenu (plain ,cipher) = 
-
--- findIndexes : takes a 2 Strings (plain & cipher) and for every char in cipher it returns the indexes on plain that you can reach
+-- findIndexes : takes a crib (plain & cipher) and for every char in cipher it returns the indexes on plain that you can reach
 findIndexes :: Crib -> [[Int]]
 findIndexes (plain , cipher) = [ elemIndices c plain | c <- cipher]
 
+-- appendMenu : takes a menu [int] and expands it to other menus depending on number of positions you can reach from last element in that menu
+-- eg. appendMenu [1,0] crib = [[1,0,5] , [1,0,8] , [1,0,11]]
+appendMenu :: Menu -> Crib -> [Menu]
+appendMenu menu crib = [ menu ++ [num] | num <- ( (findIndexes crib) !! (last menu) ) , notElem num menu ] --notElem is to prevent duplicates
+
+----------------------------TESTING-------------------------
+--Constants I used to test my functions---------------------
+steckerTest = [('A' ,'M') , ('S' , 'R')]
+offsetTest = (0,0,0)
+testEnigma = (SimpleEnigma rotor1 rotor2 rotor3 reflectorB offsetTest)
+testEnigma2 = (SteckeredEnigma rotor1 rotor2 rotor3 reflectorB offsetTest steckerTest)
 plain' = "WETTERVORHERSAGEBISKAYA"
 cipher' = "RWIVTYRESXBFOGKUHQBAISE"
+message = "INXTHEXENIGMAXMACHINEXEACHXROTORXHADXAXNOTCHSTOPXINXTHEXSPECIFICATIONCOMMAXIXHAVEXASSUMEDXTHATXTHATXNOTCHXISXALWAYSXATXPOSITTIONXTWENTYFIVEXZXXWHEREASXINXREALITYXITXWASXATXAXDIFFERENTXPOSITIONXFORXEACHXROTORSTOPXWHENXAXKEYXWASXPRESSEDCOMMAXTHEXVERYXFIRSTXTHINGXTHATXHAPPENEDXWASXTHATXTHEXROTORSXWEREXADVANCEDSTOPXTHEXRIGHTXROTORXISXROTATEDXBYXONESTOPXIFXITXHADXALREADYXBEENXROTATEDXTWENTYFIVEXTIMESXTHATXISXWASXATXPOSITIONXTWENTYFIVECOMMAXTHEXNOTCHXWOULDXCAUSEXTHEXMIDDLEXROTORXTOXALSOXROTATESTOPXIFXTHATXROTORXHADXALREADYXBEENXROTATEDXTWENTYFIVEXTIMECOMMAXITXINXTURNXWOULDXCAUSEXTHEXLEFTXROTORXTOXROTATESTOPXINXOTHERXWORDSCOMMAXFORXTHEXMIDDLEXROTORXTOXROTATEXONCECOMMAXTHEREXHADXTOXBEXTWENTYSIXXKEYXPRESSESSTOPXFORXTHEXLEFTXROTORXTOXROTATEXONCECOMMAXTHEREXHADXTOXBEXTWENTYSIXXTIMESXTWENTYSIXXKEYXPRESSESSTOPXTOXGETXALLXTHEXWAYXBACKXTOXZEROCOMMAZEROCOMMAZEROCOMMAXTHEREXHADXTOXBEXTWENTYSIXXTIMESXTWENTYSIXXTIMESXTWENTYSIXXKEYXPRESSEESSTOPTHEXDOWNSIDEXOFXTHEXSIMPLIFICATIONXTHATXIXHAVEXGIVENXISXTHATXTHEXONLINEXSIMULATORSXWILLXNOTXPROGRESSXTHEXSUBSEQUENTXROTORSXATXTHEXSAMEXTIMEXTHATXYOURXSIMULATIONXDOESSTOPXINXACTUALXFACTXROTORXONEXHADXAXNOTCHXATXPOSITIONXQCOMMAXROTORTWOXATXPOSITIONXECOMMAXROTORTHREEXATXPOSITIONXVCOMMAXROTORFOURXATXPOSITIONXJCOMMAXANDXROTORFIVEXATXPOSITIONXZSTOP"
 crib' = (plain' , cipher')
-
--- expandMenu : takes a menu and expands it to other menus depending on number of positions you can reach from last element in that menu
-expandMenu :: Menu -> Crib -> [Menu]
-expandMenu menu crib = [ menu ++ [num] | num <- ( (findIndexes crib) !! (last menu) ) ]
-
-
-
