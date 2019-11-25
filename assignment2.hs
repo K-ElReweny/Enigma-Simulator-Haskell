@@ -4,8 +4,6 @@ import Data.Char
 
 -- Written by Karim ElReweny , ksaelreweny1@shefffield.ac.uk , mea18kse
 
-
-
 -- validateCipher : takes cipher message as parameter , returns True if Cipher contains each letter once and once only.
 alphabet = ['A'..'Z']
 validateCipher :: Cipher -> Bool 
@@ -27,12 +25,7 @@ encode cipher offset char = (offsetCipher cipher offset) !! (alphaPos char)
 encodeMessage :: Cipher -> Int -> String -> String
 encodeMessage cipher offset message = [ encode cipher offset char | char <- message]  -- for every char drawn from message , encode is called
 
-
-
-{- reverseEncode: takes a cipher, an offset and an encoded character, and returns the plain character
-    CREDITS TO DR EMMA NORLING FOR USING HER VERSION OF THIS FUNCTION FOR BEING MORE EFFICIENT
--}
-
+-- reverseEncode: takes a cipher, an offset and an encoded character, and returns the plain character
 reverseEncode :: Cipher -> Int -> Char -> Char
 reverseEncode cipher offset encodedChar = ['A' .. 'Z'] !! (head (elemIndices encodedChar (offsetCipher cipher offset)))
 
@@ -187,6 +180,15 @@ findIndexes (plain , cipher) = [ elemIndices c plain | c <- cipher]
 -- eg. appendMenu [1,0] crib = [[1,0,5] , [1,0,8] , [1,0,11]]
 appendMenu :: Menu -> Crib -> [Menu]
 appendMenu menu crib = [ menu ++ [num] | num <- ( (findIndexes crib) !! (last menu) ) , notElem num menu ] --notElem is to prevent duplicates
+
+-- longestList : takes a list of menus and compute the longest length
+longestList :: [Menu] -> Int 
+longestList menus = (maximum [ length menu | menu <- menus])
+
+--longestMenu : takes a crib and return longest menu
+-- my approach is for every index keep on calling appendMenu until you reach a deadend (almost a Depth-First approach)
+-- store that deadend in array of menus then compute the longest one and return it , unfortunetaly don't have time to fully
+-- implement all pats of it.
 
 ----------------------------TESTING-------------------------
 --Constants I used to test my functions---------------------
